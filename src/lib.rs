@@ -195,13 +195,13 @@ impl SeedLinkClient {
     /// Select Location and Channel, say "SELECT {location}{channel}"
     pub fn select(&mut self, sid: &StreamID) -> Result<usize, SLError> {
         let s = format!("SELECT {:2}{:3}", sid.location, sid.channel);
-        try!(self.cmd(s.as_str()));
+        self.cmd(s.as_str())?;
         self.expect_ok()
     }
     /// Read and expect an "OK" response from the server
     pub fn expect_ok(&mut self) -> Result<usize, SLError> {
         let mut rbuf = [0u8;2048];
-        let n = try!(self.read(&mut rbuf));
+        let n = self.read(&mut rbuf)?;
         let s = String::from_utf8_lossy(&rbuf[..n]);
         if self.verbose {
             println!("===>: {:?}", s);
@@ -227,11 +227,11 @@ impl SeedLinkClient {
     }
     /// Handshaking, say "HELLO", read response, return number of bytes read
     pub fn connect(&mut self, verbose: bool) -> Result<usize, SLError> {
-        try!(self.hello());
+        self.hello()?;
         self.verbose = verbose;
         // Read Response
         let mut data = vec![0u8;2048];
-        let n = try!(self.read(&mut data));
+        let n = self.read(&mut data)?;
         let v = data[..n].to_vec();
         let s = String::from_utf8(v).expect("Found invalid UTF-8");
         if self.verbose {
@@ -247,10 +247,10 @@ impl SeedLinkClient {
         let mut txt = String::with_capacity(1024);
         let mut rbuf = [0u8;4096];
         let mut buf = vec![];
-        try!(self.cmd("INFO STREAMS"));
+        self.cmd("INFO STREAMS")?;
         loop {
             let mut id = 0;
-            let n = try!(self.read(&mut rbuf));
+            let n = self.read(&mut rbuf)?;
             buf.extend(rbuf[..n].iter().cloned());
             while buf.len() >= 520 {
                 id = parse_header(&buf)?;
